@@ -34,7 +34,7 @@ def fake_engine(monkeypatch):
 
 
 def _controls(**over):
-    d = dict(speed=1.0, pitch=0, timbre=0, exag=0.5, cfg=0.5, temp=0.8, seed=0, preset="natural",
+    d = dict(accent="multilingue", speed=1.0, pitch=0, timbre=0, exag=0.5, cfg=0.5, temp=0.8, seed=0, preset="natural",
              loud=-16, s_pause=0.25, p_pause=0.6)
     d.update(over)
     return list(d.values())
@@ -48,8 +48,8 @@ def test_voice_library_and_settings():
     sel, _, _ = ui.create_voice("A minha voz")
     slug = sel.value
     assert slug == "a-minha-voz"
-    ui.save_voice_settings(slug, *_controls(speed=1.2))
-    assert ui.load_voice_settings(slug)[0] == 1.2
+    ui.save_voice_settings(slug, *_controls(speed=1.2, accent="ptpt"))
+    assert ui.load_voice_settings(slug)[:2] == ["ptpt", 1.2]
     ui.delete_voice(slug, True)
     assert all(v.slug != slug for v in ui.LIB.list())
 

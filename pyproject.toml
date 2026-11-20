@@ -18,6 +18,7 @@ dependencies = [
     "soundfile>=0.13",
     "num2words>=0.5.13",
     "gradio==6.8.0",
+    "piper-tts==1.8.0",           # GPL-3.0; voz base com sotaque de Portugal (modo PT-PT)
     "setuptools<81",              # a marca de água (resemble-perth) usa pkg_resources, removido no setuptools 81
 ]
 

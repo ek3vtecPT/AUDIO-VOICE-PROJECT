@@ -32,7 +32,7 @@ READ_PROMPTS = """Lê estas frases com calma, no teu tom normal. Varia a entoaç
 Dica: grava várias sessões curtas (3 a 5 minutos cada), sempre com o mesmo microfone e à mesma distância."""
 
 ABOUT = """### Sobre
-- **Modelos:** Chatterbox Multilingue (síntese, MIT), Demucs (separação de voz, MIT), Silero VAD (deteção de fala, MIT).
+- **Modelos:** Chatterbox Multilingue (síntese e conversão de voz, MIT), Piper pt_PT-tugão (voz base de Portugal, GPL-3.0), Demucs (separação de voz, MIT), Silero VAD (deteção de fala, MIT).
 - **Pasta de dados:** `{data}` — vozes, material de treino, modelos e locuções ficam só neste computador.
 - **Marca de água:** o Chatterbox inclui uma marca de água inaudível em todo o áudio gerado.
 - **Obrigação legal (AI Act, art. 50):** indica nas publicações que a locução foi gerada por IA.
@@ -48,13 +48,13 @@ def _voice_choices(include_default: bool = True):
 
 
 def _settings_from(*vals) -> VoiceSettings:
-    speed, pitch, timbre, exag, cfg, temp, seed, preset, loud, s_pause, p_pause = vals
+    accent, speed, pitch, timbre, exag, cfg, temp, seed, preset, loud, s_pause, p_pause = vals
     return VoiceSettings(float(speed), float(pitch), float(timbre), float(exag), float(cfg), float(temp),
-                         int(seed or 0), preset, float(loud), float(s_pause), float(p_pause))
+                         int(seed or 0), preset, float(loud), float(s_pause), float(p_pause), accent)
 
 
 def _settings_values(s: VoiceSettings):
-    return [s.speed, s.pitch, s.timbre, s.exaggeration, s.cfg_weight, s.temperature, s.seed,
+    return [s.accent, s.speed, s.pitch, s.timbre, s.exaggeration, s.cfg_weight, s.temperature, s.seed,
             s.preset, s.loudness, s.sentence_pause, s.paragraph_pause]
 
 
@@ -281,15 +281,19 @@ def build() -> gr.Blocks:
                         gen_btn = gr.Button("Gerar locução", variant="primary")
                         save_btn = gr.Button("Guardar afinação nesta voz")
                 with gr.Column(scale=2):
+                    accent = gr.Radio(
+                        [("Português de Portugal (voz base pt-PT convertida para a voz escolhida)", "ptpt"),
+                         ("Multilingue (mais expressivo, mas pode soar brasileiro)", "multilingue")],
+                        value="ptpt", label="Sotaque")
                     with gr.Accordion("Afinação", open=True):
                         speed = gr.Slider(0.7, 1.5, 1.0, step=0.05, label="Velocidade")
                         pitch = gr.Slider(-6, 6, 0, step=0.5, label="Tom (semitons): grave ↔ agudo")
                         timbre = gr.Slider(-4, 4, 0, step=0.25, label="Timbre: mais cheio ↔ mais fino")
-                        exag = gr.Slider(0.25, 1.5, 0.5, step=0.05, label="Expressividade")
+                        exag = gr.Slider(0.25, 1.5, 0.5, step=0.05, label="Expressividade (só multilingue)")
                         preset = gr.Dropdown([(v, k) for k, v in PRESETS.items()], value="natural", label="Acabamento")
                     with gr.Accordion("Avançado", open=False):
-                        cfg = gr.Slider(0.0, 1.0, 0.5, step=0.05, label="Fidelidade à referência / ritmo")
-                        temp = gr.Slider(0.3, 1.2, 0.8, step=0.05, label="Variação")
+                        cfg = gr.Slider(0.0, 1.0, 0.5, step=0.05, label="Fidelidade à referência / ritmo (só multilingue)")
+                        temp = gr.Slider(0.3, 1.2, 0.8, step=0.05, label="Variação (só multilingue)")
                         seed = gr.Number(0, precision=0, label="Semente (0 = aleatória; repete o resultado)")
                         loud = gr.Slider(-23, -12, -16, step=1, label="Volume final (LUFS): −14 redes sociais")
                         s_pause = gr.Slider(0.0, 1.0, 0.25, step=0.05, label="Pausa entre frases (s)")
@@ -298,7 +302,7 @@ def build() -> gr.Blocks:
             out_files = gr.File(label="Descarregar (WAV, MP3, legendas SRT)", file_count="multiple")
             status = gr.Markdown()
 
-            controls = [speed, pitch, timbre, exag, cfg, temp, seed, preset, loud, s_pause, p_pause]
+            controls = [accent, speed, pitch, timbre, exag, cfg, temp, seed, preset, loud, s_pause, p_pause]
             gen_btn.click(generate, [text, voice, *controls, last], [out_audio, out_files, status, last])
             save_btn.click(save_voice_settings, [voice, *controls], None)
             voice.change(load_voice_settings, voice, controls)

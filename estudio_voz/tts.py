@@ -75,6 +75,29 @@ class TTSEngine:
         self._ref = None
         free_gpu()
 
+    def _ptpt_speaker(self, model, ref: str | None):
+        """Modo PT-PT: voz base portuguesa (Piper) convertida para o timbre da referência.
+
+        Reutiliza o descodificador (S3Gen) já carregado, sem ocupar mais memória de vídeo.
+        """
+        import soundfile as sf
+        from chatterbox.vc import ChatterboxVC
+
+        from . import paths
+        from .ptpt import PTPT
+
+        vc = ChatterboxVC(model.s3gen, model.device, ref_dict=None if ref else self._builtin_conds.gen)
+        if ref:
+            vc.set_target_voice(ref)
+        tmp = paths.TMP_DIR / "ptpt_base.wav"
+
+        def speak(text: str):
+            base, base_sr = PTPT.speak(text)
+            sf.write(str(tmp), base, base_sr)
+            return vc.generate(str(tmp))
+
+        return speak
+
     def voice_encoder(self):
         """Codificador de voz do Chatterbox (para comparar vozes ao preparar o material de treino)."""
         if self._model is not None:
@@ -103,12 +126,19 @@ class TTSEngine:
             model = self._load()
             sr = model.sr
             ref = str(reference) if reference else None
-            if ref != self._ref:
-                if ref:
-                    model.prepare_conditionals(ref, exaggeration=s.exaggeration)
-                else:
-                    model.conds = self._builtin_conds
-                self._ref = ref
+            if s.accent == "ptpt":
+                speak = self._ptpt_speaker(model, ref)
+            else:
+                if ref != self._ref:
+                    if ref:
+                        model.prepare_conditionals(ref, exaggeration=s.exaggeration)
+                    else:
+                        model.conds = self._builtin_conds
+                    self._ref = ref
+
+                def speak(text: str) -> np.ndarray:
+                    return model.generate(text, language_id=LANGUAGE, exaggeration=s.exaggeration,
+                                          cfg_weight=s.cfg_weight, temperature=s.temperature)
             if s.seed:
                 torch.manual_seed(int(s.seed))
 
@@ -121,13 +151,7 @@ class TTSEngine:
                 if seg.text:
                     if progress:
                         progress(done / max(1, len(todo)), f"A gerar frase {done + 1} de {len(todo)}")
-                    wav = model.generate(
-                        seg.text,
-                        language_id=LANGUAGE,
-                        exaggeration=s.exaggeration,
-                        cfg_weight=s.cfg_weight,
-                        temperature=s.temperature,
-                    )
+                    wav = speak(seg.text)
                     wav = _trim_silence(wav.squeeze(0).cpu().numpy().astype(np.float32), sr)
                     timings.append((pos / sr, (pos + len(wav)) / sr, seg.text))
                     parts.append(wav)

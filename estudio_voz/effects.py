@@ -29,6 +29,7 @@ class VoiceSettings:
     loudness: float = -16.0       # LUFS alvo (-14 redes sociais, -16 podcast)
     sentence_pause: float = 0.25
     paragraph_pause: float = 0.6
+    accent: str = "ptpt"          # "multilingue" (Chatterbox direto) | "ptpt" (voz base pt-PT + conversão)
 
     @classmethod
     def from_dict(cls, d: dict | None) -> "VoiceSettings":

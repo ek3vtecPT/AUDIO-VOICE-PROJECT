@@ -51,6 +51,13 @@ def main() -> None:
     raw2, sr2, _ = ENGINE.synthesize(T.prepare("Agora com a voz de referência.", {}), ref, VoiceSettings(seed=2))
     print(f"Clonagem: {len(raw2) / sr2:.1f} s em {time.time() - t0:.0f} s")
     assert len(raw2) / sr2 > 0.8
+
+    # Modo Português de Portugal: voz base Piper pt-PT convertida para o timbre da referência
+    t0 = time.time()
+    raw3, sr3, t3 = ENGINE.synthesize(T.prepare("Bom dia! Isto é português de Portugal.", {}), ref,
+                                       VoiceSettings(accent="ptpt"))
+    print(f"Modo PT-PT: {len(raw3) / sr3:.1f} s em {time.time() - t0:.0f} s")
+    assert len(raw3) / sr3 > 0.8 and len(t3) == 2
     print("OK")
 
 

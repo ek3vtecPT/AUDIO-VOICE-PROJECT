@@ -32,6 +32,9 @@ def download_models() -> None:
     from silero_vad import load_silero_vad
 
     load_silero_vad()
+    from .ptpt import download_voice
+
+    download_voice()
     print("Modelos prontos.")
 
 
