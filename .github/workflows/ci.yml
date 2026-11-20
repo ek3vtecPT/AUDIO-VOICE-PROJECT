@@ -44,6 +44,18 @@ jobs:
           .\.venv\Scripts\python.exe -m pytest -q
           if ($LASTEXITCODE) { exit 1 }
 
+      # Carrega os modelos verdadeiros (como o instalador faz no fim) e gera áudio a sério, em CPU
+      - name: Teste com os modelos verdadeiros
+        shell: powershell
+        run: |
+          $env:PATH = "$PWD\tools\ffmpeg\bin;$PWD\tools\deno;$env:PATH"
+          $env:PYTHONUTF8 = "1"
+          $env:ESTUDIO_VOZ_DADOS = "$env:RUNNER_TEMP\dados"
+          .\.venv\Scripts\python.exe -m estudio_voz --descarregar-modelos
+          if ($LASTEXITCODE) { exit 1 }
+          .\.venv\Scripts\python.exe tests\real_smoke.py
+          if ($LASTEXITCODE) { exit 1 }
+
       # Pacote para os utilizadores: descompactar e fazer duplo clique em instalar.bat
       - name: Preparar pacote
         shell: powershell

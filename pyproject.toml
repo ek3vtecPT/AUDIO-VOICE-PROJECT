@@ -18,6 +18,7 @@ dependencies = [
     "soundfile>=0.13",
     "num2words>=0.5.13",
     "gradio==6.8.0",
+    "setuptools<81",              # a marca de água (resemble-perth) usa pkg_resources, removido no setuptools 81
 ]
 
 [project.optional-dependencies]
