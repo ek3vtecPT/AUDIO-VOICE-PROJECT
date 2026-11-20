@@ -37,16 +37,45 @@ if (-not (Test-Path $Uv)) {
     Remove-Item -Recurse -Force $x
 }
 
-$env:UV_PYTHON_INSTALL_DIR = Join-Path $Tools "python"
 $env:UV_CACHE_DIR = Join-Path $Tools "uv-cache"
 $env:UV_LINK_MODE = "copy"
 
-# ---------------------------------------------------------------- 2. Python 3.11 isolado
-Passo "A preparar o Python 3.11"
-& $Uv python install 3.11; Verificar "instalar Python"
+# ---------------------------------------------------------------- 2. Python 3.11 portátil
+# Descarregado e extraído diretamente para tools\python: não precisa de Python no PC e
+# não cria ligações de pastas (junctions), que alguns Windows bloqueiam (erro 448).
+$PyHome = Join-Path $Tools "python311"   # pasta nova: ignora restos de tentativas anteriores
+$PyBase = Join-Path $PyHome "python.exe"
+if (-not (Test-Path $PyBase)) {
+    Passo "A descarregar o Python 3.11 (portátil, só para este programa)"
+    $url = $null
+    try {
+        $lista = & $Uv python list 3.11 --all-platforms --only-downloads --output-format json 2>$null | ConvertFrom-Json
+        $url = ($lista | Where-Object { $_.implementation -eq "cpython" -and $_.os -eq "windows" -and
+                 $_.arch -eq "x86_64" -and $_.variant -eq "default" -and $_.url -like "*.tar.gz" } |
+                Select-Object -First 1).url
+    } catch { $url = $null }
+    if (-not $url) {
+        $url = "https://releases.astral.sh/github/python-build-standalone/releases/download/20260718/cpython-3.11.15%2B20260718-x86_64-pc-windows-msvc-install_only_stripped.tar.gz"
+    }
+    $tgz = Join-Path $env:TEMP "python-portatil.tar.gz"
+    $tmp = Join-Path $env:TEMP "python-portatil"
+    Invoke-WebRequest -Uri $url -OutFile $tgz -UseBasicParsing
+    if (Test-Path $tmp) { Remove-Item -Recurse -Force $tmp }
+    New-Item -ItemType Directory -Force -Path $tmp | Out-Null
+    & tar.exe -xzf $tgz -C $tmp; Verificar "extrair o Python"
+    if (Test-Path $PyHome) { Remove-Item -Recurse -Force $PyHome }
+    Move-Item -Path (Join-Path $tmp "python") -Destination $PyHome
+    Remove-Item -Recurse -Force $tmp, $tgz
+}
+& $PyBase -c "import sys; print('Python', sys.version.split()[0])"; Verificar "testar o Python"
+$env:UV_PYTHON_DOWNLOADS = "never"   # daqui em diante o uv usa só este Python
+
 $Venv = Join-Path $Root ".venv"
 $Py = Join-Path $Venv "Scripts\python.exe"
-if (-not (Test-Path $Py)) { & $Uv venv --python 3.11 $Venv; Verificar "criar ambiente Python" }
+if (-not (Test-Path $Py)) {
+    Passo "A criar o ambiente do programa"
+    & $PyBase -m venv --without-pip $Venv; Verificar "criar ambiente Python"
+}
 
 # ---------------------------------------------------------------- 3. PyTorch
 if ($CPU) { $TorchIndex = "https://download.pytorch.org/whl/cpu" }
