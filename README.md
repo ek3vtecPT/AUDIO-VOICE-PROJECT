@@ -14,11 +14,12 @@ com **a tua própria voz**. Funciona no teu PC (placa NVIDIA), sem serviços pag
 
 ## Instalar (Windows 10/11 com placa NVIDIA)
 
-**Opção A — Setup.exe:** no GitHub, *Actions → Testes e instalador →* última execução → *Artifacts →*
-`EstudioVoz-Setup`. Corre o `Setup.exe` (não pede administrador). Demora 20 a 40 min porque descarrega
-Python, PyTorch (~2,5 GB), ffmpeg e os modelos (~3 GB).
-
-**Opção B — a partir do código:** descarrega/clona o repositório e faz duplo clique em `instalar.bat`.
+1. No GitHub: *Actions → Testes e instalador →* última execução com ✔ *→ Artifacts →* **EstudioVoz** (ZIP).
+2. Descompacta para uma pasta **fora do OneDrive**, por exemplo `C:\EstudioVoz`
+   (o programa ocupa ~10 GB e o OneDrive tentaria sincronizá-lo).
+3. Duplo clique em **`instalar.bat`**. Não precisa de Python no PC nem de administrador: o instalador traz
+   o seu próprio Python e descarrega PyTorch (~2,5 GB), ffmpeg e os modelos (~3 GB). Demora 20 a 40 min.
+   Se o Windows mostrar "O Windows protegeu o seu PC", carrega em *Mais informações → Executar mesmo assim*.
 
 Depois abre pelo atalho **Estúdio de Voz** (abre uma janela própria do Edge).
 
@@ -41,7 +42,8 @@ Quanto material: 1 minuto já chega para clonar; **20 a 30 minutos** de fala lim
 ## Os teus dados
 
 Tudo fica em `%LOCALAPPDATA%\EstudioVoz` (vozes, material, modelos, locuções). **Nada disto vai para o GitHub.**
-Desinstalar o programa não apaga esta pasta.
+
+**Desinstalar:** apaga a pasta do programa (ex. `C:\EstudioVoz`) e o atalho. Para apagar também as vozes e os modelos, apaga `%LOCALAPPDATA%\EstudioVoz`.
 
 ## Avisos legais
 
@@ -80,4 +82,5 @@ Os testes usam um motor de voz falso; o CI do Windows corre o instalador real em
 ## Licenças
 
 Chatterbox, Demucs, Silero VAD: MIT · yt-dlp: Unlicense · pedalboard: GPL-3.0 · ffmpeg (build GPL) · Gradio: Apache-2.0.
+O pacote é um ZIP com `instalar.bat` (sem Setup.exe), para não depender da licença comercial do Inno Setup.
 Todos permitem uso comercial; a pedalboard e o ffmpeg GPL obrigam a disponibilizar o código se o programa for distribuído a terceiros.

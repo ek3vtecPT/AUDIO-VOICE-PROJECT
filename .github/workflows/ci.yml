@@ -22,7 +22,7 @@ jobs:
         run: python -m pytest -q
 
   windows:
-    name: Instalação real no Windows + Setup.exe
+    name: Instalação real no Windows + pacote ZIP
     runs-on: windows-latest
     timeout-minutes: 60
     steps:
@@ -44,16 +44,19 @@ jobs:
           .\.venv\Scripts\python.exe -m pytest -q
           if ($LASTEXITCODE) { exit 1 }
 
-      - name: Compilar Setup.exe
+      # Pacote para os utilizadores: descompactar e fazer duplo clique em instalar.bat
+      - name: Preparar pacote
         shell: powershell
         run: |
-          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
-          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress; }
-          & $iscc scripts\windows\EstudioVoz.iss
-          if ($LASTEXITCODE) { exit 1 }
+          $d = "pacote\EstudioVoz"
+          New-Item -ItemType Directory -Force -Path "$d\scripts\windows" | Out-Null
+          Copy-Item -Recurse estudio_voz "$d\estudio_voz" -Exclude "__pycache__"
+          Remove-Item -Recurse -Force "$d\estudio_voz\__pycache__" -ErrorAction SilentlyContinue
+          Copy-Item scripts\windows\instalar.ps1 "$d\scripts\windows\"
+          Copy-Item instalar.bat, iniciar.bat, iniciar-rede.bat, atualizar.bat, pyproject.toml, requirements-windows.txt, README.md $d
 
       - uses: actions/upload-artifact@v6
         with:
-          name: EstudioVoz-Setup
-          path: saida_instalador/*.exe
+          name: EstudioVoz
+          path: pacote/
           if-no-files-found: error
