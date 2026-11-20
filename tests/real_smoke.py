@@ -41,9 +41,16 @@ def main() -> None:
     print(f"Demucs + VAD: {len(vocals) / dataset.SR:.1f} s, {len(clips)} excertos em {time.time() - t0:.0f} s")
     assert len(vocals) > 0
     enc = ENGINE.voice_encoder()
-    emb = enc.embeds_from_wavs([vocals.astype(np.float32)], sample_rate=dataset.SR)
+    emb = dataset.embed(enc, [vocals], dataset.SR)
     print("Codificador de voz:", emb.shape)
     assert emb.shape[0] == 1
+
+    # Clonagem a partir de uma amostra de referência (o caminho usado com a voz do utilizador)
+    t0 = time.time()
+    ref = wav
+    raw2, sr2, _ = ENGINE.synthesize(T.prepare("Agora com a voz de referência.", {}), ref, VoiceSettings(seed=2))
+    print(f"Clonagem: {len(raw2) / sr2:.1f} s em {time.time() - t0:.0f} s")
+    assert len(raw2) / sr2 > 0.8
     print("OK")
 
 

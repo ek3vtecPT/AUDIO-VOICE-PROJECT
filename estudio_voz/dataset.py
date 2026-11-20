@@ -172,8 +172,16 @@ def _quality_ok(clip: np.ndarray) -> bool:
     return peak > 0.05 and rms > 0.005 and clipped < 0.001
 
 
-def _embeddings(clips: list[np.ndarray], encoder) -> np.ndarray:
-    return encoder.embeds_from_wavs(clips, sample_rate=SR, batch_size=16)
+def embed(encoder, wavs: list[np.ndarray], sr: int, as_spk: bool = False) -> np.ndarray:
+    """Impressões de voz. Reamostra aqui (torchaudio) para o codificador não precisar do resampy."""
+    import torch
+    import torchaudio.functional as AF
+
+    target = encoder.hp.sample_rate
+    if sr != target:
+        wavs = [AF.resample(torch.from_numpy(np.ascontiguousarray(w, dtype=np.float32)), sr, target).numpy()
+                for w in wavs]
+    return encoder.embeds_from_wavs(wavs, sample_rate=target, as_spk=as_spk, batch_size=16)
 
 
 def main_speaker_filter(embeds: np.ndarray, threshold: float,
@@ -253,8 +261,8 @@ def import_sources(
                 anchor = None
                 if anchor_wav is not None and anchor_wav.exists():
                     a, a_sr = sf.read(str(anchor_wav), dtype="float32", always_2d=True)
-                    anchor = encoder.embeds_from_wavs([a.mean(1)], sample_rate=a_sr, as_spk=True)
-                keep, sims = main_speaker_filter(_embeddings(clips, encoder), threshold, anchor)
+                    anchor = embed(encoder, [a.mean(1)], a_sr, as_spk=True)
+                keep, sims = main_speaker_filter(embed(encoder, clips, SR), threshold, anchor)
 
             stem = re.sub(r"[^\w-]+", "_", Path(src.label).stem)[:40]
             stamp = int(time.time())
