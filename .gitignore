@@ -1,0 +1,13 @@
+.venv/
+tools/
+__pycache__/
+*.pyc
+.pytest_cache/
+build/
+dist/
+*.egg-info/
+saida_instalador/
+# dados pessoais (vozes, gravações) nunca vão para o repositório
+dados/
+*.wav
+*.mp3

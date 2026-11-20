@@ -1,0 +1,9 @@
+# Dependências leves para correr os testes sem GPU nem modelos (CI)
+gradio==6.8.0
+pedalboard==0.9.26
+pyloudnorm==0.2.0
+soundfile>=0.13
+numpy==1.26.4
+num2words>=0.5.13
+yt-dlp>=2026.10.26
+pytest>=8

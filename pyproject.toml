@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "estudio-voz"
+version = "0.1.0"
+description = "Locuções em português a partir de texto, com vozes próprias (Chatterbox, Demucs, Silero VAD)"
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "chatterbox-tts==0.1.7",      # MIT; fixa torch 2.6.0 e gradio 6.8.0
+    "demucs==4.1.0",              # MIT
+    "silero-vad==6.2.3",          # MIT
+    "yt-dlp[default]>=2026.10.26",# Unlicense; atualizar com frequência
+    "pedalboard==0.9.26",         # GPL-3.0 (uso interno)
+    "pyloudnorm==0.2.0",
+    "soundfile>=0.13",
+    "num2words>=0.5.13",
+    "gradio==6.8.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+estudio-voz = "estudio_voz.__main__:main"
+
+[tool.setuptools]
+packages = ["estudio_voz"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
